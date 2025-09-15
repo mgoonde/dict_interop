@@ -6,6 +6,7 @@ module m_db
   implicit none
 
 
+
   !> initial allocation size, reallocate when exceed
   !! this is allocated without sourcing, so actually just "reserve the place in memory",
   !! not actually allocating anything until values are passed.
@@ -48,9 +49,9 @@ module m_db
 
 contains
 
-  !> get index of the key in me%keys
-  !! if key does not exist return -1
   function get_index( me, key )result(idx)
+    !! get index of the key in me%keys
+    !! if key does not exist return -1
     implicit none
     class( t_db ), intent(in) :: me
     character(*), intent(in) :: key   !! keyword of wanted data
@@ -69,7 +70,7 @@ contains
   subroutine realloc( me )
     !! test if arrays need to be reallocated:
     !! based on n_occupied.
-    !! NOTE: this will move things to a different location in memory,
+    !! NOTE: if reallocation happens, it will move things to a different location in memory,
     !! meaning all pointers to data elements are invalid after realloc!
     implicit none
     class( t_db ), intent(inout) :: me
@@ -122,7 +123,7 @@ contains
     endif
   end subroutine realloc
 
-
+  ! internal print
   subroutine print(me, print_vals)
     implicit none
     class( t_db ), intent(in) :: me
@@ -179,9 +180,11 @@ contains
     if(.not.overwrite) me% n_occupied = me% n_occupied + 1
   end function t_db_add
 
+  !! external management of db:
 
 
   function db_create()result(cptr)
+    !! Create db instance
     implicit none
     type( c_ptr ) :: cptr
     type( t_db ), pointer :: me
@@ -198,6 +201,7 @@ contains
   end function db_create
 
   subroutine db_destroy( db )
+    !! Destroy db instance
     implicit none
     type( c_ptr ), intent(in) :: db
     type( t_db ), pointer :: me
@@ -215,7 +219,9 @@ contains
     deallocate(me)
   end subroutine db_destroy
 
+
   subroutine db_print(db)
+    !! Output the current contents of `db`
     type( c_ptr ), intent(in) :: db
     type( t_db ), pointer :: me
     call c_f_pointer( db, me)
@@ -225,6 +231,10 @@ contains
 
   ! db_add, call from fortran
   function db_add( db, key, val, dtype, store_shape, overwrite )result(ierr)
+    !! Add a key-value pair to db.
+    !! By default, the shape of `val` is preserved.
+    !! if `store_shape` is specified, then the value is reshaped
+    !! as specified by `store_shape`.
     implicit none
     type( c_ptr ), intent(in) :: db
     character(*), intent(in) :: key
@@ -270,10 +280,13 @@ contains
   end function db_add
 
 
-  function db_get_cpy( db, key )result(val)
+  function db_get_cpy( db, key, reshape )result(val)
+    !! Get a hard-copy (allocated) of `key`.
+    !! Optionally reshape.
     implicit none
     type(c_ptr), intent(in) :: db
     character(*), intent(in) :: key
+    integer, intent(in), optional :: reshape(:)
     type( dbval ) :: val
     type( t_db ), pointer :: me
     integer :: idx
@@ -281,85 +294,91 @@ contains
     idx = me%get_index(key)
     if( idx < 1 ) return
     val = me%vals(idx)
+    if(present(reshape)) then
+       val%drank = size(reshape)
+       val%dsize = reshape
+    end if
   end function db_get_cpy
 
-  function db_get_ptr( db, key )result(val_ptr)
-    ! pass through dbval_ptr type
+  function db_get_ptr( db, key, reshape )result(val_ptr)
+    !! Obtain pointer to `key`.
+    !! Optionally reshape.
+    ! NOTE: pass through dbval_ptr type (to avoid ambiguous assignment)
     implicit none
     type(c_ptr), intent(in) :: db
     character(*), intent(in) :: key
+    integer, intent(in), optional :: reshape(:)
     type( dbval_ptr ) :: val_ptr
     type( t_db ), pointer :: me
     integer :: idx
     call c_f_pointer(db, me)
     idx = me%get_index(key)
     if( idx < 1 ) return
+    nullify(val_ptr%dbval)
     val_ptr%dbval => me%vals(idx)
+    val_ptr%drank = me%vals(idx)%drank
+    val_ptr%dsize = me%vals(idx)%dsize
+    if(present(reshape)) then
+       val_ptr%drank = size(reshape)
+       val_ptr%dsize = reshape
+    end if
   end function db_get_ptr
+
+
+  function db_exist( db, key )result(exist)
+    !! Check if `key` exists in db.
+    !! Return positive value if yes, negative otherwise
+    type(c_ptr), intent(in) :: db
+    character(*), intent(in) :: key
+    integer :: exist
+    type( t_db ), pointer :: me
+    call c_f_pointer( db, me )
+    exist = me%get_index(key)
+  end function db_exist
+
+  function db_get_dtype( db, key )result(dtype)
+    !! Return DTYPE encoder of `key`
+    type(c_ptr), intent(in) :: db
+    character(*), intent(in) :: key
+    integer :: dtype
+    type( t_db ), pointer :: me
+    integer :: idx
+    dtype = DTYPE_UNKNOWN
+    call c_f_pointer(db,me)
+    idx = me%get_index(key)
+    if(idx < 1) return
+    dtype = me%vals(idx)%dtype
+  end function db_get_dtype
+
+  function db_get_drank( db, key )result(drank)
+    !! Return rank of `key`
+    type(c_ptr), intent(in) :: db
+    character(*), intent(in) :: key
+    integer :: drank
+    type( t_db ), pointer :: me
+    integer :: idx
+    drank = -1
+    call c_f_pointer(db,me)
+    idx = me%get_index(key)
+    if(idx < 1) return
+    drank = me%vals(idx)%drank
+  end function db_get_drank
+
+  function db_get_dsize( db, key )result(dsize)
+    !! Return the size (shape) of `key`
+    type(c_ptr), intent(in) :: db
+    character(*), intent(in) :: key
+    integer, allocatable :: dsize(:)
+    type( t_db ), pointer :: me
+    integer :: idx
+    call c_f_pointer(db,me)
+    idx = me%get_index(key)
+    if(idx < 1) return
+    dsize = me%vals(idx)%dsize
+  end function db_get_dsize
 
 
 
 end module m_db
 
 
-
-! external stuff for bind(c)
-function db_create()result(cptr)bind(C,name="db_create")
-  use, intrinsic :: iso_c_binding, only: c_ptr
-  use m_db, only: db_create_x => db_create
-  implicit none
-  type( c_ptr ) :: cptr
-  cptr = db_create_x()
-end function db_create
-
-
-subroutine db_destroy(cptr)bind(C,name="db_destroy")
-  use, intrinsic :: iso_c_binding, only: c_ptr
-  use m_db, only: db_destroy_x => db_destroy
-  type(c_ptr), intent(in), value :: cptr
-  call db_destroy_x(cptr)
-end subroutine db_destroy
-
-subroutine db_print(cptr)bind(C,name="db_print")
-  use, intrinsic :: iso_c_binding, only: c_ptr
-  use m_db, only: db_print_x => db_print
-  type(c_ptr), intent(in), value :: cptr
-  call db_print_x(cptr)
-end subroutine db_print
-
-function db_add(cptr, key, val, dtype, drank, store_shape, overwrite )result(ierr)bind(C,name="db_add")
-  use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_char, c_size_t, c_null_char
-  use m_db, only: db_add_x => db_add
-  implicit none
-  interface
-     function c_strlen(str) bind(c, name='strlen')
-       import :: c_ptr, c_size_t, c_char
-       implicit none
-       character(c_char), dimension(*), intent(in) :: str
-       integer(c_size_t) :: c_strlen
-     end function c_strlen
-  end interface
-  type( c_ptr ), intent(in), value :: cptr
-  character(len=1, kind=c_char), intent(in) :: key(*)
-  type( c_ptr ), intent(in) :: val
-  integer(c_int), intent(in), value :: dtype
-  integer(c_int), intent(in), value :: drank
-  integer(c_int), intent(in) :: store_shape(drank)
-  integer(c_int), intent(in), value :: overwrite ! 0 for no overwrite, /=0 for overwrite
-  integer(c_int) :: ierr
-
-  integer(c_size_t) :: i, w
-  character(:), allocatable :: fkey
-  logical :: ovr
-  ! transfor key into f string
-  w = c_strlen(key)
-  allocate( character(len=w) :: fkey )
-  i = 1
-  do while( key(i) .ne. c_null_char .and. (int(i,c_size_t) .le. w) )
-     fkey(i:i) = key(i)
-     i = i + 1
-  end do
-  ovr = .false.
-  if( overwrite /= 0_c_int )ovr=.true.
-  ierr = int( db_add_x(cptr, fkey, val, dtype, store_shape, ovr), kind(ierr))
-end function db_add

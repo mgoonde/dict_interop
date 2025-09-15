@@ -15,7 +15,7 @@ module m_dbval
 
   type :: dbval
      !! store data in 1D arrays, but store also the original dsize
-     private
+     ! private
      integer( c_int ), pointer, contiguous :: i(:) => null()
      real( c_float ), pointer, contiguous  :: rf(:) => null()
      real( c_double ), pointer, contiguous :: rd(:) => null()
@@ -48,6 +48,10 @@ module m_dbval
   type :: dbval_ptr
      !! auxiliary type to help overloading pointer assignment
      type(dbval), pointer :: dbval => null()
+     integer :: drank
+     integer, allocatable :: dsize(:)
+   contains
+     final :: dbval_ptr_destroy
   end type dbval_ptr
 
 
@@ -57,10 +61,18 @@ module m_dbval
 
   interface assignment(=)
      procedure :: assign_dbval_i0
+     procedure :: assign_dbval_i1
+     procedure :: assign_dbval_i2
+     procedure :: assign_dbval_i3
+     procedure :: assign_dbval_i4
   end interface assignment(=)
 
   interface assignment(=)
      procedure :: assign_dbval_ptr_i0
+     procedure :: assign_dbval_ptr_i1
+     procedure :: assign_dbval_ptr_i2
+     procedure :: assign_dbval_ptr_i3
+     procedure :: assign_dbval_ptr_i4
   end interface assignment(=)
 
 contains
@@ -79,6 +91,12 @@ contains
     if( allocated(me%dsize))deallocate(me%dsize)
     me%cptr = c_null_ptr
   end subroutine dbval_destroy
+
+  subroutine dbval_ptr_destroy(me)
+    type(dbval_ptr), intent(inout) :: me
+    if(allocated(me%dsize))deallocate(me%dsize)
+    if(associated(me%dbval))nullify(me%dbval)
+  end subroutine dbval_ptr_destroy
 
   subroutine dbval_nullify(me)
     !! nullify
@@ -340,52 +358,83 @@ contains
 
   ! hard-copy
   subroutine assign_dbval_i0( lhs, rhs )
-    implicit none
     integer, intent(out) :: lhs
     class( dbval ), intent(in) :: rhs
-    select case( rhs%dtype )
-    case( DTYPE_INT )
-       select case( rhs% drank )
-       case( 0 ); lhs = int( rhs%i(1), kind(lhs) )
-       case( 1 )
-          if( rhs%dsize(1)==1) then
-             lhs = int( rhs%i(1), kind(lhs) )
-          else
-             call assignment_error("dsize>1 to i0")
-          end if
-       case default
-          ! err
-          call assignment_error("drank>1 to i0")
-       end select
-    case default
-       ! err
-       call assignment_error(get_dtype_str(rhs%dtype)//" to i0")
-    end select
+    if( rhs%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i0")
+    if( rhs%drank /= 0 ) call assignment_error("drank/=0 to i0")
+    lhs = int( rhs%i(1), kind(lhs) )
   end subroutine assign_dbval_i0
   subroutine assign_dbval_i1( lhs, rhs )
-    implicit none
     integer, allocatable, intent(out) :: lhs(:)
     class(dbval), intent(in) :: rhs
+    if( rhs%dtype /= DTYPE_INT )call assignment_error("dtype/=int to i1")
+    if( rhs%drank /= 1) call assignment_error("drank/=1 to i1")
+    allocate( lhs, source=int(rhs%i, kind(lhs)) )
   end subroutine assign_dbval_i1
+  subroutine assign_dbval_i2( lhs, rhs )
+    integer, allocatable, intent(out), target :: lhs(:,:)
+    class(dbval), intent(in) :: rhs
+    if( rhs%dtype /= DTYPE_INT )call assignment_error("dtype/=int to i2")
+    if( rhs%drank /= 2) call assignment_error("drank/=2 to i2")
+    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2)) )
+    lhs = int( reshape( rhs%i, shape=[rhs%dsize(1), rhs%dsize(2)] ), kind(lhs) )
+  end subroutine assign_dbval_i2
+  subroutine assign_dbval_i3( lhs, rhs )
+    integer, allocatable, intent(out), target :: lhs(:,:,:)
+    class(dbval), intent(in) :: rhs
+    if( rhs%dtype /= DTYPE_INT )call assignment_error("dtype/=int to i3")
+    if( rhs%drank /= 3) call assignment_error("drank/=3 to i3")
+    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3)) )
+    lhs = int( reshape( rhs%i, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3)] ), kind(lhs) )
+  end subroutine assign_dbval_i3
+  subroutine assign_dbval_i4( lhs, rhs )
+    integer, allocatable, intent(out), target :: lhs(:,:,:,:)
+    class(dbval), intent(in) :: rhs
+    if( rhs%dtype /= DTYPE_INT )call assignment_error("dtype/=int to i4")
+    if( rhs%drank /= 4) call assignment_error("drank/=4 to i4")
+    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3),1:rhs%dsize(4)) )
+    lhs = int( reshape( rhs%i, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3), rhs%dsize(4)] ), kind(lhs) )
+  end subroutine assign_dbval_i4
 
 
-  ! ptr
+
+  ! ptr: the dsize is read from dbval_ptr, since it could be overwritten by assign
   subroutine assign_dbval_ptr_i0( lhs, rhs )
-    implicit none
     integer(c_int), pointer, intent(out) :: lhs
     class( dbval_ptr ), intent(in) :: rhs
-    select case( rhs%dbval%dtype )
-    case( DTYPE_INT )
-       select case( rhs%dbval% drank )
-       case( 0 ); lhs => rhs%dbval%i(1)
-       case( 1 ); if( rhs%dbval%dsize(1)==1) lhs => rhs%dbval%i(1)
-       case default
-          ! err
-       end select
-    case default
-       ! err
-    end select
+    if( rhs%dbval%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i0_ptr")
+    if( rhs%drank /= 0 ) call assignment_error("drank/=0 to i0_ptr")
+    call c_f_pointer( rhs%dbval%cptr, lhs )
   end subroutine assign_dbval_ptr_i0
+  subroutine assign_dbval_ptr_i1( lhs, rhs )
+    integer(c_int), pointer, intent(out) :: lhs(:)
+    class(dbval_ptr), intent(in) :: rhs
+    if( rhs%dbval%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i1_ptr")
+    if( rhs%drank /= 1 ) call assignment_error("drank/=1 to i1_ptr")
+    call c_f_pointer( rhs%dbval%cptr, lhs, shape=rhs%dsize )
+  end subroutine assign_dbval_ptr_i1
+  subroutine assign_dbval_ptr_i2( lhs, rhs )
+    integer(c_int), pointer, intent(out) :: lhs(:,:)
+    class(dbval_ptr), intent(in) :: rhs
+    if( rhs%dbval%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i2_ptr")
+    if( rhs%drank /= 2 ) call assignment_error("drank/=2 to i2_ptr")
+    call c_f_pointer( rhs%dbval%cptr, lhs, shape=rhs%dsize )
+  end subroutine assign_dbval_ptr_i2
+  subroutine assign_dbval_ptr_i3( lhs, rhs )
+    integer(c_int), pointer, intent(out) :: lhs(:,:,:)
+    class(dbval_ptr), intent(in) :: rhs
+    if( rhs%dbval%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i3_ptr")
+    if( rhs%drank /= 3 ) call assignment_error("drank/=3 to i3_ptr")
+    call c_f_pointer( rhs%dbval%cptr, lhs, shape=rhs%dsize )
+  end subroutine assign_dbval_ptr_i3
+  subroutine assign_dbval_ptr_i4( lhs, rhs )
+    integer(c_int), pointer, intent(out) :: lhs(:,:,:,:)
+    class(dbval_ptr), intent(in) :: rhs
+    if( rhs%dbval%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i4_ptr")
+    if( rhs%drank /= 4 ) call assignment_error("drank/=4 to i4_ptr")
+    call c_f_pointer( rhs%dbval%cptr, lhs, shape=rhs%dsize )
+  end subroutine assign_dbval_ptr_i4
+
 
 
 
