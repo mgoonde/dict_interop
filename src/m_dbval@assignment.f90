@@ -26,106 +26,157 @@ contains
   ! hard-copy
 
 
+  ! The below are assingments for:
+  ! ```
+  ! type( dbval ) :: t
+  ! integer, allocatable :: i1(:)
+  ! t = db_get_cpy( db, "key", reshape=[n] )
+  ! i1 = t
+  ! ! instead do directly:
+  ! i1 = db_get_cpy( db, "key", reshape=[n] )
+  ! ```
   ! i
   module procedure assign_dbval_i0
+    integer(c_int), pointer :: valptr
     ASSERT( rhs%dtype, DTYPE_INT, rhs%drank, 0, "i0" )
-    lhs = int( rhs%i(1), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr )
+    lhs = int( valptr, kind(lhs) )
   end procedure
   module procedure assign_dbval_i1
+    integer(c_int), pointer :: valptr(:)
     ASSERT( rhs%dtype, DTYPE_INT, rhs%drank, 1, "i1")
-    allocate( lhs, source=int(rhs%i, kind(lhs)) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=int(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_i2
+    integer(c_int), pointer :: valptr(:,:)
     ASSERT( rhs%dtype, DTYPE_INT, rhs%drank, 2, "i2" )
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2)) )
-    lhs = int( reshape( rhs%i, shape=[rhs%dsize(1), rhs%dsize(2)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=int(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_i3
+    integer(c_int), pointer :: valptr(:,:,:)
     ASSERT( rhs%dtype, DTYPE_INT, rhs%drank, 3, "i3")
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3)) )
-    lhs = int( reshape( rhs%i, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=int(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_i4
+    integer(c_int), pointer :: valptr(:,:,:,:)
     ASSERT(rhs%dtype, DTYPE_INT, rhs%drank, 4, "i4")
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3),1:rhs%dsize(4)) )
-    lhs = int( reshape( rhs%i, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3), rhs%dsize(4)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=int(valptr, kind(lhs)) )
   end procedure
   ! rf
   module procedure assign_dbval_rf0
+    real(c_float), pointer :: valptr
     ASSERT(rhs%dtype, DTYPE_REAL32, rhs%drank, 0, "rf0")
-    lhs = real( rhs%rf(1), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr )
+    lhs = real( valptr, kind(lhs) )
   end procedure
   module procedure assign_dbval_rf1
+    real(c_float), pointer :: valptr(:)
     ASSERT(rhs%dtype, DTYPE_REAL32, rhs%drank, 1, "rf1")
-    allocate( lhs, source=real(rhs%rf, kind(lhs)) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=real(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_rf2
+    real(c_float), pointer :: valptr(:,:)
     ASSERT(rhs%dtype, DTYPE_REAL32, rhs%drank, 2, "rf2")
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2)) )
-    lhs = real( reshape( rhs%rf, shape=[rhs%dsize(1), rhs%dsize(2)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=real(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_rf3
+    real(c_float), pointer :: valptr(:,:,:)
     ASSERT( rhs%dtype, DTYPE_REAL32, rhs%drank, 3, "rf3")
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3)) )
-    lhs = real( reshape( rhs%rf, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=real(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_rf4
+    real(c_float), pointer :: valptr(:,:,:,:)
     ASSERT( rhs%dtype, DTYPE_REAL32, rhs%drank, 4, "rf4")
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3),1:rhs%dsize(4)) )
-    lhs = real( reshape( rhs%rf, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3), rhs%dsize(4)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=real(valptr, kind(lhs)) )
   end procedure
   ! rd
   module procedure assign_dbval_rd0
+    real(c_double), pointer :: valptr
     ASSERT( rhs%dtype, DTYPE_REAL64, rhs%drank, 0, "rd0")
-    lhs = real( rhs%rf(1), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr )
+    lhs = real( valptr, kind(lhs) )
   end procedure
   module procedure assign_dbval_rd1
+    real(c_double), pointer :: valptr(:)
     ASSERT(rhs%dtype, DTYPE_REAL64, rhs%drank, 1, "rd1")
-    allocate( lhs, source=real(rhs%rf, kind(lhs)) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=real(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_rd2
+    real(c_double), pointer :: valptr(:,:)
     ASSERT(rhs%dtype, DTYPE_REAL64, rhs%drank, 2, "rd2")
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2)) )
-    lhs = real( reshape( rhs%rf, shape=[rhs%dsize(1), rhs%dsize(2)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=real(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_rd3
+    real(c_double), pointer :: valptr(:,:,:)
     ASSERT(rhs%dtype, DTYPE_REAL64, rhs%drank, 3, "rd3")
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3)) )
-    lhs = real( reshape( rhs%rf, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=real(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_rd4
+    real(c_double), pointer :: valptr(:,:,:,:)
     ASSERT(rhs%dtype, DTYPE_REAL64, rhs%drank, 4, "rd4")
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3),1:rhs%dsize(4)) )
-    lhs = real( reshape( rhs%rf, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3), rhs%dsize(4)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=real(valptr, kind(lhs)) )
   end procedure
   ! b
   module procedure assign_dbval_b0
+    logical(c_bool), pointer :: valptr
     ASSERT( rhs%dtype, DTYPE_BOOL, rhs%drank, 0, "b0" )
-    lhs = logical(rhs%b(1), kind(lhs))
+    call c_f_pointer( rhs%cptr, valptr )
+    lhs = logical(valptr, kind(lhs))
   end procedure
   module procedure assign_dbval_b1
+    logical(c_bool), pointer :: valptr(:)
     ASSERT( rhs%dtype, DTYPE_BOOL, rhs%drank, 1, "b1" )
-    allocate( lhs(1:rhs%dsize(1)) )
-    lhs = logical( rhs%b, kind(lhs))
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=logical(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_b2
+    logical(c_bool), pointer :: valptr(:,:)
     ASSERT( rhs%dtype, DTYPE_BOOL, rhs%drank, 2, "b2" )
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2)) )
-    lhs = logical( reshape( rhs%b, shape=[rhs%dsize(1), rhs%dsize(2)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=logical(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_b3
+    logical(c_bool), pointer :: valptr(:,:,:)
     ASSERT( rhs%dtype, DTYPE_BOOL, rhs%drank, 3, "b3" )
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3)) )
-    lhs = logical( reshape( rhs%b, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=logical(valptr, kind(lhs)) )
   end procedure
   module procedure assign_dbval_b4
+    logical(c_bool), pointer :: valptr(:,:,:,:)
     ASSERT( rhs%dtype, DTYPE_BOOL, rhs%drank, 4, "b4" )
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3),1:rhs%dsize(4)) )
-    lhs = logical( reshape( rhs%b, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3), rhs%dsize(4)] ), kind(lhs) )
+    call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
+    allocate( lhs, source=logical(valptr, kind(lhs)) )
   end procedure
 
 
 
+  ! The below are assingments for:
+  ! ```
+  ! type( dbval_ptr ) :: t
+  ! integer(c_int), pointer :: i1(:)
+  ! t = db_get_ptr( db, "key", reshape=[n] )
+  ! i1 = t
+  ! ! instead do directly:
+  ! i1 = db_get_ptr( db, "key", reshape=[n] )
+  ! ```
+  ! In order to differentiate the normal assignment from pointer assingment,
+  ! an auxiliary type is created `dbval_ptr`. The function returning pointer to
+  ! `dbval` actually returns type `dbval_ptr`, which is then used in assignment
+  ! overloading.
+  ! The argument `reshape` is saved into `dtype_ptr`, and used at assignment
+  ! to reshape the data.
 
   ! ptr: the dsize is read from dbval_ptr, since it could be overwritten by assign
   module procedure assign_dbval_ptr_i0
@@ -195,7 +246,7 @@ contains
     ASSERT( rhs%dbval%dtype, DTYPE_BOOL, rhs%drank, 0, "ptr_b0" )
     call c_f_pointer( rhs%dbval%cptr, lhs )
   end procedure
-  module proceduree assign_dbval_ptr_b1
+  module procedure assign_dbval_ptr_b1
     ASSERT( rhs%dbval%dtype, DTYPE_BOOL, rhs%drank, 1, "ptr_b1" )
     call c_f_pointer( rhs%dbval%cptr, lhs, shape=rhs%dsize  )
   end procedure

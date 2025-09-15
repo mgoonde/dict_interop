@@ -219,19 +219,19 @@ module m_dbval
        class(dbval_ptr), intent(in) :: rhs
      end subroutine assign_dbval_ptr_b0
      module subroutine assign_dbval_ptr_b1( lhs, rhs )
-       logical(c_bool), pointer, intent(out) :: lhs
+       logical(c_bool), pointer, intent(out) :: lhs(:)
        class(dbval_ptr), intent(in) :: rhs
      end subroutine assign_dbval_ptr_b1
      module subroutine assign_dbval_ptr_b2( lhs, rhs )
-       logical(c_bool), pointer, intent(out) :: lhs
+       logical(c_bool), pointer, intent(out) :: lhs(:,:)
        class(dbval_ptr), intent(in) :: rhs
      end subroutine assign_dbval_ptr_b2
      module subroutine assign_dbval_ptr_b3( lhs, rhs )
-       logical(c_bool), pointer, intent(out) :: lhs
+       logical(c_bool), pointer, intent(out) :: lhs(:,:,:)
        class(dbval_ptr), intent(in) :: rhs
      end subroutine assign_dbval_ptr_b3
      module subroutine assign_dbval_ptr_b4( lhs, rhs )
-       logical(c_bool), pointer, intent(out) :: lhs
+       logical(c_bool), pointer, intent(out) :: lhs(:,:,:,:)
        class(dbval_ptr), intent(in) :: rhs
      end subroutine assign_dbval_ptr_b4
 

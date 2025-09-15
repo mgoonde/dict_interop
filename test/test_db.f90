@@ -44,15 +44,16 @@ program test_db
 
   call db_print(db)
 
-  ii2 = db_get_cpy( db, "i2", reshape=[2,6] )
-  do m = 1, 6
-     write(*,*) m, ii2(:,m)
-  end do
+  i1 = db_get_cpy( db, "i2", reshape=[12] )
+  ! do m = 1, 6
+  !    write(*,*) m, ii2(:,m)
+  ! end do
+  deallocate(i1)
 
-  write(*,*) ii2
-  deallocate(ii2)
+  ! write(*,*) ii2
+  ! deallocate(ii2)
 
-  t1 = db_get_ptr( db, "i2", reshape=[12,1] )
+  t1 = db_get_ptr( db, "i2", reshape=[12] )
   write(*,*) "hre"
   write(*,"(*(i0,1x))") t1
   ! write(*,*) t2
