@@ -27,7 +27,8 @@ module m_db
      ! character(len=max_keylen), pointer :: keys(:)
 
      !> store values
-     type( dbval ), allocatable :: vals(:)
+     ! type( dbval ), allocatable :: vals(:)
+     type( dbval ), pointer :: vals(:)
 
      !> flag for empty or deleted
      !! 'e' -> empty
@@ -39,14 +40,11 @@ module m_db
 
    contains
      procedure, private :: get_index
-     procedure, private :: t_db_realloc
-     procedure, private :: db_print
+     procedure, private :: realloc
+     procedure, private :: print
+     procedure, private :: add => t_db_add
   end type t_db
 
-
-  interface t_db
-     procedure :: t_db_constructor
-  end interface t_db
 
 contains
 
@@ -68,7 +66,7 @@ contains
   end function get_index
 
 
-  subroutine t_db_realloc( me )
+  subroutine realloc( me )
     !! test if arrays need to be reallocated:
     !! based on n_occupied.
     !! NOTE: this will move things to a different location in memory,
@@ -122,10 +120,10 @@ contains
        ! deallocate( keys_tmp, vals_tmp, flags_tmp )
        me% n_size = new_size
     endif
-  end subroutine t_db_realloc
+  end subroutine realloc
 
 
-  subroutine db_print(me, print_vals)
+  subroutine print(me, print_vals)
     implicit none
     class( t_db ), intent(in) :: me
     logical, intent(in), optional :: print_vals
@@ -140,11 +138,50 @@ contains
             trim( me%keys(i) ), i
        if(print_v)write(*,*) me%vals(i)
     end do
-  end subroutine db_print
+  end subroutine print
+
+  ! internal add from cptr
+  function t_db_add( me, key, val, dtype, drank, dsize, overwrite )result(ierr)
+    implicit none
+    class( t_db ), intent(inout) :: me
+    character(*), intent(in) :: key
+    type(c_ptr), intent(in) :: val
+    integer, intent(in) :: dtype, drank
+    integer, intent(in) :: dsize(drank)
+    logical, intent(in) :: overwrite
+    integer :: ierr
+    integer :: idx, strlen
+    ierr=0
+    idx = me%get_index(key)
+    if( idx > 0 .and. .not.overwrite) then
+       ! data exists, will not overwrite
+       ierr = -5 !ERR_OVERWRITE
+       ! if(associated(me%bugs))call me%bugs%err_set(ier,__FILE__,__LINE__, &
+       !      msg=err(ier)//": "//key )
+       return
+    elseif( idx > 0 .and. overwrite ) then
+       ! overwrite existing key-val on same idx
+       call me%vals(idx)%destroy()
+    elseif( idx < 0 ) then
+       ! key is new
+       call me% realloc()
+       idx = me% n_occupied + 1
+    endif
+    me%vals(idx) = dbval( val, dtype, drank, dsize, ierr )
+    if( ierr/= 0 ) then
+       ! get errmsg
+       return
+    end if
+    ! set metadata
+    strlen = min( len_trim(key), max_keylen )
+    me%keys(idx) = key( 1:strlen )
+    me%flags(idx) = "o"
+    if(.not.overwrite) me% n_occupied = me% n_occupied + 1
+  end function t_db_add
 
 
 
-  function t_db_constructor()result(cptr)
+  function db_create()result(cptr)
     implicit none
     type( c_ptr ) :: cptr
     type( t_db ), pointer :: me
@@ -158,9 +195,9 @@ contains
     allocate( me%flags(1:batch_size), source="e" )
     ! me%bugs => t_error()
     cptr = c_loc(me)
-  end function t_db_constructor
+  end function db_create
 
-  subroutine t_db_destroy( db )
+  subroutine db_destroy( db )
     implicit none
     type( c_ptr ), intent(in) :: db
     type( t_db ), pointer :: me
@@ -176,26 +213,31 @@ contains
     deallocate( me% vals )   ! deallocate happens where? in data%destroy?
     deallocate( me% flags )
     deallocate(me)
-  end subroutine t_db_destroy
+  end subroutine db_destroy
+
+  subroutine db_print(db)
+    type( c_ptr ), intent(in) :: db
+    type( t_db ), pointer :: me
+    call c_f_pointer( db, me)
+    call me%print(print_vals=.true.)
+  end subroutine db_print
 
 
-
-  subroutine t_db_add( db, key, val, dtype, overwrite, store_shape, ierr )
+  ! db_add, call from fortran
+  function db_add( db, key, val, dtype, store_shape, overwrite )result(ierr)
     implicit none
     type( c_ptr ), intent(in) :: db
     character(*), intent(in) :: key
     class(*), intent(in) :: val(..)
     integer, intent(in) :: dtype
-    logical, intent(in), optional :: overwrite
     integer, intent(in), optional :: store_shape(:)
-    integer, intent(out), optional :: ierr
+    logical, intent(in), optional :: overwrite
+    integer :: ierr
 
     type( t_db ), pointer :: me
     logical :: ovr
-    integer :: ier, idx, i, strlen
-    integer :: srank
+    integer :: srank, i
     integer, allocatable :: ssize(:)
-
     integer(c_intptr_t) :: ptrval
     type( c_ptr ) :: cval
 
@@ -223,55 +265,101 @@ contains
 
     call c_f_pointer( db, me )
     ovr=.false.
-    ier=0
     if(present(overwrite))ovr=overwrite
-    idx = me%get_index(key)
-    if( idx > 0 .and. .not.ovr) then
-       ! data exists, will not overwrite
-       ier = -5 !ERR_OVERWRITE
-       ! if(associated(me%bugs))call me%bugs%err_set(ier,__FILE__,__LINE__, &
-       !      msg=err(ier)//": "//key )
-       if(present(ierr))ierr=ier
-       return
-    elseif( idx > 0 .and. ovr ) then
-       ! overwrite existing key-val on same idx
-       call me%vals(idx)%destroy()
-    elseif( idx < 0 ) then
-       ! key is new
-       call me% t_db_realloc()
-       idx = me% n_occupied + 1
-    endif
-    me%vals(idx) = dbval( cval, dtype, srank, ssize, ierr )
-    if(present(ierr))ierr=ier
-    if( ier/= 0 ) return
-    ! set metadata
-    strlen = min( len_trim(key), max_keylen )
-    me%keys(idx) = key( 1:strlen )
-    me%flags(idx) = "o"
-    if(.not.ovr) me% n_occupied = me% n_occupied + 1
-  end subroutine t_db_add
+    ierr = me%add( key, cval, dtype, srank, ssize, ovr )
+  end function db_add
 
-  subroutine t_db_print(db)
-    type( c_ptr ), intent(in) :: db
+
+  function db_get_cpy( db, key )result(val)
+    implicit none
+    type(c_ptr), intent(in) :: db
+    character(*), intent(in) :: key
+    type( dbval ) :: val
     type( t_db ), pointer :: me
-    call c_f_pointer( db, me)
-    call me%db_print(print_vals=.true.)
-  end subroutine t_db_print
+    integer :: idx
+    call c_f_pointer(db, me)
+    idx = me%get_index(key)
+    if( idx < 1 ) return
+    val = me%vals(idx)
+  end function db_get_cpy
+
+  function db_get_ptr( db, key )result(val_ptr)
+    ! pass through dbval_ptr type
+    implicit none
+    type(c_ptr), intent(in) :: db
+    character(*), intent(in) :: key
+    type( dbval_ptr ) :: val_ptr
+    type( t_db ), pointer :: me
+    integer :: idx
+    call c_f_pointer(db, me)
+    idx = me%get_index(key)
+    if( idx < 1 ) return
+    val_ptr%dbval => me%vals(idx)
+  end function db_get_ptr
+
+
 
 end module m_db
 
 
-function t_db()result(cptr)bind(C,name="t_db")
+
+! external stuff for bind(c)
+function db_create()result(cptr)bind(C,name="db_create")
   use, intrinsic :: iso_c_binding, only: c_ptr
-  use m_db, only: t_db_x => t_db
+  use m_db, only: db_create_x => db_create
   implicit none
   type( c_ptr ) :: cptr
-  cptr = t_db_x()
-end function t_db
+  cptr = db_create_x()
+end function db_create
 
-subroutine t_db_destroy(cptr)bind(C,name="t_db_destroy")
+
+subroutine db_destroy(cptr)bind(C,name="db_destroy")
   use, intrinsic :: iso_c_binding, only: c_ptr
-  use m_db, only: t_db_destroy_x => t_db_destroy
-  type(c_ptr), intent(in) :: cptr
-  call t_db_destroy_x(cptr)
-end subroutine t_db_destroy
+  use m_db, only: db_destroy_x => db_destroy
+  type(c_ptr), intent(in), value :: cptr
+  call db_destroy_x(cptr)
+end subroutine db_destroy
+
+subroutine db_print(cptr)bind(C,name="db_print")
+  use, intrinsic :: iso_c_binding, only: c_ptr
+  use m_db, only: db_print_x => db_print
+  type(c_ptr), intent(in), value :: cptr
+  call db_print_x(cptr)
+end subroutine db_print
+
+function db_add(cptr, key, val, dtype, drank, store_shape, overwrite )result(ierr)bind(C,name="db_add")
+  use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_char, c_size_t, c_null_char
+  use m_db, only: db_add_x => db_add
+  implicit none
+  interface
+     function c_strlen(str) bind(c, name='strlen')
+       import :: c_ptr, c_size_t, c_char
+       implicit none
+       character(c_char), dimension(*), intent(in) :: str
+       integer(c_size_t) :: c_strlen
+     end function c_strlen
+  end interface
+  type( c_ptr ), intent(in), value :: cptr
+  character(len=1, kind=c_char), intent(in) :: key(*)
+  type( c_ptr ), intent(in) :: val
+  integer(c_int), intent(in), value :: dtype
+  integer(c_int), intent(in), value :: drank
+  integer(c_int), intent(in) :: store_shape(drank)
+  integer(c_int), intent(in), value :: overwrite ! 0 for no overwrite, /=0 for overwrite
+  integer(c_int) :: ierr
+
+  integer(c_size_t) :: i, w
+  character(:), allocatable :: fkey
+  logical :: ovr
+  ! transfor key into f string
+  w = c_strlen(key)
+  allocate( character(len=w) :: fkey )
+  i = 1
+  do while( key(i) .ne. c_null_char .and. (int(i,c_size_t) .le. w) )
+     fkey(i:i) = key(i)
+     i = i + 1
+  end do
+  ovr = .false.
+  if( overwrite /= 0_c_int )ovr=.true.
+  ierr = int( db_add_x(cptr, fkey, val, dtype, store_shape, ovr), kind(ierr))
+end function db_add

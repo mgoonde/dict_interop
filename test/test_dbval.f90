@@ -11,6 +11,7 @@ program test_dbval
   integer, allocatable :: dsize(:)
   integer :: i
   integer(c_intptr_t) :: pval
+  integer( c_int ), pointer :: b
 
   allocate( cval(1:3,1:3,1:4,1:5), source=3)
   cptr = c_loc(cval)
@@ -43,4 +44,10 @@ program test_dbval
 
   end block
 
+  allocate(b, source=18 )
+  cptr = c_loc(b)
+  t = dbval( cptr, DTYPE_INT, 0, [0], ierr )
+  write(*,*) t
+  i=t
+  write(*,*) i
 end program test_dbval

@@ -45,9 +45,23 @@ module m_dbval
   end type dbval
 
 
+  type :: dbval_ptr
+     !! auxiliary type to help overloading pointer assignment
+     type(dbval), pointer :: dbval => null()
+  end type dbval_ptr
+
+
   interface dbval
      procedure :: dbval_constructor_cptr
   end interface dbval
+
+  interface assignment(=)
+     procedure :: assign_dbval_i0
+  end interface assignment(=)
+
+  interface assignment(=)
+     procedure :: assign_dbval_ptr_i0
+  end interface assignment(=)
 
 contains
 
@@ -283,6 +297,7 @@ contains
 
 
 
+
   function get_dtype_str(val)result(str)
     !! return string of datatype depending on encoder value
     implicit none
@@ -314,6 +329,65 @@ contains
     case( "DTYPE_STR"     ); val = DTYPE_STR
     end select
   end function get_dtype_val
+
+
+  subroutine assignment_error( msg )
+    character(*), intent(in) :: msg
+    write(*,"(a)") ">> db assignment error:"//msg
+    error stop 1
+  end subroutine assignment_error
+
+
+  ! hard-copy
+  subroutine assign_dbval_i0( lhs, rhs )
+    implicit none
+    integer, intent(out) :: lhs
+    class( dbval ), intent(in) :: rhs
+    select case( rhs%dtype )
+    case( DTYPE_INT )
+       select case( rhs% drank )
+       case( 0 ); lhs = int( rhs%i(1), kind(lhs) )
+       case( 1 )
+          if( rhs%dsize(1)==1) then
+             lhs = int( rhs%i(1), kind(lhs) )
+          else
+             call assignment_error("dsize>1 to i0")
+          end if
+       case default
+          ! err
+          call assignment_error("drank>1 to i0")
+       end select
+    case default
+       ! err
+       call assignment_error(get_dtype_str(rhs%dtype)//" to i0")
+    end select
+  end subroutine assign_dbval_i0
+  subroutine assign_dbval_i1( lhs, rhs )
+    implicit none
+    integer, allocatable, intent(out) :: lhs(:)
+    class(dbval), intent(in) :: rhs
+  end subroutine assign_dbval_i1
+
+
+  ! ptr
+  subroutine assign_dbval_ptr_i0( lhs, rhs )
+    implicit none
+    integer(c_int), pointer, intent(out) :: lhs
+    class( dbval_ptr ), intent(in) :: rhs
+    select case( rhs%dbval%dtype )
+    case( DTYPE_INT )
+       select case( rhs%dbval% drank )
+       case( 0 ); lhs => rhs%dbval%i(1)
+       case( 1 ); if( rhs%dbval%dsize(1)==1) lhs => rhs%dbval%i(1)
+       case default
+          ! err
+       end select
+    case default
+       ! err
+    end select
+  end subroutine assign_dbval_ptr_i0
+
+
 
 
 
