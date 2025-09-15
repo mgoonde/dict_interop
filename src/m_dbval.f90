@@ -1,6 +1,7 @@
 module m_dbval
 
   use, intrinsic :: iso_c_binding
+  use, intrinsic :: iso_fortran_env, only: sp => real32, dp => real64
   implicit none
 
   !! datatype encoders
@@ -59,20 +60,235 @@ module m_dbval
      procedure :: dbval_constructor_cptr
   end interface dbval
 
+  !! declare the assingments from submodule
+  interface
+     ! i
+     module subroutine assign_dbval_i0( lhs, rhs )
+       integer, intent(out) :: lhs
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_i0
+     module subroutine assign_dbval_i1( lhs, rhs )
+       integer, intent(out), allocatable :: lhs(:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_i1
+     module subroutine assign_dbval_i2( lhs, rhs )
+       integer, intent(out), allocatable :: lhs(:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_i2
+     module subroutine assign_dbval_i3( lhs, rhs )
+       integer, intent(out), allocatable :: lhs(:,:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_i3
+     module subroutine assign_dbval_i4( lhs, rhs )
+       integer, intent(out), allocatable :: lhs(:,:,:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_i4
+     ! rf
+     module subroutine assign_dbval_rf0( lhs, rhs )
+       real(sp), intent(out) :: lhs
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_rf0
+     module subroutine assign_dbval_rf1( lhs, rhs )
+       real(sp), intent(out), allocatable :: lhs(:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_rf1
+     module subroutine assign_dbval_rf2( lhs, rhs )
+       real(sp), intent(out), allocatable :: lhs(:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_rf2
+     module subroutine assign_dbval_rf3( lhs, rhs )
+       real(sp), intent(out), allocatable :: lhs(:,:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_rf3
+     module subroutine assign_dbval_rf4( lhs, rhs )
+       real(sp), intent(out), allocatable :: lhs(:,:,:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_rf4
+     ! rd
+     module subroutine assign_dbval_rd0( lhs, rhs )
+       real(dp), intent(out) :: lhs
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_rd0
+     module subroutine assign_dbval_rd1( lhs, rhs )
+       real(dp), intent(out), allocatable :: lhs(:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_rd1
+     module subroutine assign_dbval_rd2( lhs, rhs )
+       real(dp), intent(out), allocatable :: lhs(:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_rd2
+     module subroutine assign_dbval_rd3( lhs, rhs )
+       real(dp), intent(out), allocatable :: lhs(:,:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_rd3
+     module subroutine assign_dbval_rd4( lhs, rhs )
+       real(dp), intent(out), allocatable :: lhs(:,:,:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_rd4
+     ! b
+     module subroutine assign_dbval_b0( lhs, rhs )
+       logical, intent(out) :: lhs
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_b0
+     module subroutine assign_dbval_b1( lhs, rhs )
+       logical, intent(out), allocatable :: lhs(:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_b1
+     module subroutine assign_dbval_b2( lhs, rhs )
+       logical, intent(out), allocatable :: lhs(:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_b2
+     module subroutine assign_dbval_b3( lhs, rhs )
+       logical, intent(out), allocatable :: lhs(:,:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_b3
+     module subroutine assign_dbval_b4( lhs, rhs )
+       logical, intent(out), allocatable :: lhs(:,:,:,:)
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_b4
+
+
+
+     ! ptrs
+     ! i
+     module subroutine assign_dbval_ptr_i0( lhs, rhs )
+       integer(c_int), pointer, intent(out) :: lhs
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_i0
+     module subroutine assign_dbval_ptr_i1( lhs, rhs )
+       integer(c_int), pointer, intent(out) :: lhs(:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_i1
+     module subroutine assign_dbval_ptr_i2( lhs, rhs )
+       integer(c_int), pointer, intent(out) :: lhs(:,:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_i2
+     module subroutine assign_dbval_ptr_i3( lhs, rhs )
+       integer(c_int), pointer, intent(out) :: lhs(:,:,:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_i3
+     module subroutine assign_dbval_ptr_i4( lhs, rhs )
+       integer(c_int), pointer, intent(out) :: lhs(:,:,:,:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_i4
+     ! rf
+     module subroutine assign_dbval_ptr_rf0( lhs, rhs )
+       real(c_float), pointer, intent(out) :: lhs
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_rf0
+     module subroutine assign_dbval_ptr_rf1( lhs, rhs )
+       real(c_float), pointer, intent(out) :: lhs(:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_rf1
+     module subroutine assign_dbval_ptr_rf2( lhs, rhs )
+       real(c_float), pointer, intent(out) :: lhs(:,:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_rf2
+     module subroutine assign_dbval_ptr_rf3( lhs, rhs )
+       real(c_float), pointer, intent(out) :: lhs(:,:,:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_rf3
+     module subroutine assign_dbval_ptr_rf4( lhs, rhs )
+       real(c_float), pointer, intent(out) :: lhs(:,:,:,:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_rf4
+     ! rd
+     module subroutine assign_dbval_ptr_rd0( lhs, rhs )
+       real(c_double), pointer, intent(out) :: lhs
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_rd0
+     module subroutine assign_dbval_ptr_rd1( lhs, rhs )
+       real(c_double), pointer, intent(out) :: lhs(:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_rd1
+     module subroutine assign_dbval_ptr_rd2( lhs, rhs )
+       real(c_double), pointer, intent(out) :: lhs(:,:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_rd2
+     module subroutine assign_dbval_ptr_rd3( lhs, rhs )
+       real(c_double), pointer, intent(out) :: lhs(:,:,:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_rd3
+     module subroutine assign_dbval_ptr_rd4( lhs, rhs )
+       real(c_double), pointer, intent(out) :: lhs(:,:,:,:)
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_rd4
+     ! b
+     module subroutine assign_dbval_ptr_b0( lhs, rhs )
+       logical(c_bool), pointer, intent(out) :: lhs
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_b0
+     module subroutine assign_dbval_ptr_b1( lhs, rhs )
+       logical(c_bool), pointer, intent(out) :: lhs
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_b1
+     module subroutine assign_dbval_ptr_b2( lhs, rhs )
+       logical(c_bool), pointer, intent(out) :: lhs
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_b2
+     module subroutine assign_dbval_ptr_b3( lhs, rhs )
+       logical(c_bool), pointer, intent(out) :: lhs
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_b3
+     module subroutine assign_dbval_ptr_b4( lhs, rhs )
+       logical(c_bool), pointer, intent(out) :: lhs
+       class(dbval_ptr), intent(in) :: rhs
+     end subroutine assign_dbval_ptr_b4
+
+  end interface
+
   interface assignment(=)
-     procedure :: assign_dbval_i0
-     procedure :: assign_dbval_i1
-     procedure :: assign_dbval_i2
-     procedure :: assign_dbval_i3
-     procedure :: assign_dbval_i4
+     module procedure :: assign_dbval_i0
+     module procedure :: assign_dbval_i1
+     module procedure :: assign_dbval_i2
+     module procedure :: assign_dbval_i3
+     module procedure :: assign_dbval_i4
+
+     module procedure :: assign_dbval_rf0
+     module procedure :: assign_dbval_rf1
+     module procedure :: assign_dbval_rf2
+     module procedure :: assign_dbval_rf3
+     module procedure :: assign_dbval_rf4
+
+     module procedure :: assign_dbval_rd0
+     module procedure :: assign_dbval_rd1
+     module procedure :: assign_dbval_rd2
+     module procedure :: assign_dbval_rd3
+     module procedure :: assign_dbval_rd4
+
+     module procedure :: assign_dbval_b0
+     module procedure :: assign_dbval_b1
+     module procedure :: assign_dbval_b2
+     module procedure :: assign_dbval_b3
+     module procedure :: assign_dbval_b4
+
+     ! assign_str
   end interface assignment(=)
 
   interface assignment(=)
-     procedure :: assign_dbval_ptr_i0
-     procedure :: assign_dbval_ptr_i1
-     procedure :: assign_dbval_ptr_i2
-     procedure :: assign_dbval_ptr_i3
-     procedure :: assign_dbval_ptr_i4
+     module procedure :: assign_dbval_ptr_i0
+     module procedure :: assign_dbval_ptr_i1
+     module procedure :: assign_dbval_ptr_i2
+     module procedure :: assign_dbval_ptr_i3
+     module procedure :: assign_dbval_ptr_i4
+
+     module procedure :: assign_dbval_ptr_rf0
+     module procedure :: assign_dbval_ptr_rf1
+     module procedure :: assign_dbval_ptr_rf2
+     module procedure :: assign_dbval_ptr_rf3
+     module procedure :: assign_dbval_ptr_rf4
+
+     module procedure :: assign_dbval_ptr_rd0
+     module procedure :: assign_dbval_ptr_rd1
+     module procedure :: assign_dbval_ptr_rd2
+     module procedure :: assign_dbval_ptr_rd3
+     module procedure :: assign_dbval_ptr_rd4
+
+     module procedure :: assign_dbval_ptr_b0
+     module procedure :: assign_dbval_ptr_b1
+     module procedure :: assign_dbval_ptr_b2
+     module procedure :: assign_dbval_ptr_b3
+     module procedure :: assign_dbval_ptr_b4
   end interface assignment(=)
 
 contains
@@ -347,97 +563,5 @@ contains
     case( "DTYPE_STR"     ); val = DTYPE_STR
     end select
   end function get_dtype_val
-
-
-  subroutine assignment_error( msg )
-    character(*), intent(in) :: msg
-    write(*,"(a)") ">> db assignment error:"//msg
-    error stop 1
-  end subroutine assignment_error
-
-
-  ! hard-copy
-  subroutine assign_dbval_i0( lhs, rhs )
-    integer, intent(out) :: lhs
-    class( dbval ), intent(in) :: rhs
-    if( rhs%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i0")
-    if( rhs%drank /= 0 ) call assignment_error("drank/=0 to i0")
-    lhs = int( rhs%i(1), kind(lhs) )
-  end subroutine assign_dbval_i0
-  subroutine assign_dbval_i1( lhs, rhs )
-    integer, allocatable, intent(out) :: lhs(:)
-    class(dbval), intent(in) :: rhs
-    if( rhs%dtype /= DTYPE_INT )call assignment_error("dtype/=int to i1")
-    if( rhs%drank /= 1) call assignment_error("drank/=1 to i1")
-    allocate( lhs, source=int(rhs%i, kind(lhs)) )
-  end subroutine assign_dbval_i1
-  subroutine assign_dbval_i2( lhs, rhs )
-    integer, allocatable, intent(out), target :: lhs(:,:)
-    class(dbval), intent(in) :: rhs
-    if( rhs%dtype /= DTYPE_INT )call assignment_error("dtype/=int to i2")
-    if( rhs%drank /= 2) call assignment_error("drank/=2 to i2")
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2)) )
-    lhs = int( reshape( rhs%i, shape=[rhs%dsize(1), rhs%dsize(2)] ), kind(lhs) )
-  end subroutine assign_dbval_i2
-  subroutine assign_dbval_i3( lhs, rhs )
-    integer, allocatable, intent(out), target :: lhs(:,:,:)
-    class(dbval), intent(in) :: rhs
-    if( rhs%dtype /= DTYPE_INT )call assignment_error("dtype/=int to i3")
-    if( rhs%drank /= 3) call assignment_error("drank/=3 to i3")
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3)) )
-    lhs = int( reshape( rhs%i, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3)] ), kind(lhs) )
-  end subroutine assign_dbval_i3
-  subroutine assign_dbval_i4( lhs, rhs )
-    integer, allocatable, intent(out), target :: lhs(:,:,:,:)
-    class(dbval), intent(in) :: rhs
-    if( rhs%dtype /= DTYPE_INT )call assignment_error("dtype/=int to i4")
-    if( rhs%drank /= 4) call assignment_error("drank/=4 to i4")
-    allocate( lhs(1:rhs%dsize(1),1:rhs%dsize(2),1:rhs%dsize(3),1:rhs%dsize(4)) )
-    lhs = int( reshape( rhs%i, shape=[rhs%dsize(1), rhs%dsize(2), rhs%dsize(3), rhs%dsize(4)] ), kind(lhs) )
-  end subroutine assign_dbval_i4
-
-
-
-  ! ptr: the dsize is read from dbval_ptr, since it could be overwritten by assign
-  subroutine assign_dbval_ptr_i0( lhs, rhs )
-    integer(c_int), pointer, intent(out) :: lhs
-    class( dbval_ptr ), intent(in) :: rhs
-    if( rhs%dbval%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i0_ptr")
-    if( rhs%drank /= 0 ) call assignment_error("drank/=0 to i0_ptr")
-    call c_f_pointer( rhs%dbval%cptr, lhs )
-  end subroutine assign_dbval_ptr_i0
-  subroutine assign_dbval_ptr_i1( lhs, rhs )
-    integer(c_int), pointer, intent(out) :: lhs(:)
-    class(dbval_ptr), intent(in) :: rhs
-    if( rhs%dbval%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i1_ptr")
-    if( rhs%drank /= 1 ) call assignment_error("drank/=1 to i1_ptr")
-    call c_f_pointer( rhs%dbval%cptr, lhs, shape=rhs%dsize )
-  end subroutine assign_dbval_ptr_i1
-  subroutine assign_dbval_ptr_i2( lhs, rhs )
-    integer(c_int), pointer, intent(out) :: lhs(:,:)
-    class(dbval_ptr), intent(in) :: rhs
-    if( rhs%dbval%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i2_ptr")
-    if( rhs%drank /= 2 ) call assignment_error("drank/=2 to i2_ptr")
-    call c_f_pointer( rhs%dbval%cptr, lhs, shape=rhs%dsize )
-  end subroutine assign_dbval_ptr_i2
-  subroutine assign_dbval_ptr_i3( lhs, rhs )
-    integer(c_int), pointer, intent(out) :: lhs(:,:,:)
-    class(dbval_ptr), intent(in) :: rhs
-    if( rhs%dbval%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i3_ptr")
-    if( rhs%drank /= 3 ) call assignment_error("drank/=3 to i3_ptr")
-    call c_f_pointer( rhs%dbval%cptr, lhs, shape=rhs%dsize )
-  end subroutine assign_dbval_ptr_i3
-  subroutine assign_dbval_ptr_i4( lhs, rhs )
-    integer(c_int), pointer, intent(out) :: lhs(:,:,:,:)
-    class(dbval_ptr), intent(in) :: rhs
-    if( rhs%dbval%dtype /= DTYPE_INT ) call assignment_error("dtype/=int to i4_ptr")
-    if( rhs%drank /= 4 ) call assignment_error("drank/=4 to i4_ptr")
-    call c_f_pointer( rhs%dbval%cptr, lhs, shape=rhs%dsize )
-  end subroutine assign_dbval_ptr_i4
-
-
-
-
-
 
 end module m_dbval

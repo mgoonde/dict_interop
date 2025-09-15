@@ -52,7 +52,7 @@ program test_db
   write(*,*) ii2
   deallocate(ii2)
 
-  t1 = db_get_ptr( db, "i2", reshape=[12] )
+  t1 = db_get_ptr( db, "i2", reshape=[12,1] )
   write(*,*) "hre"
   write(*,"(*(i0,1x))") t1
   ! write(*,*) t2
