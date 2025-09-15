@@ -146,7 +146,11 @@ module m_dbval
        logical, intent(out), allocatable :: lhs(:,:,:,:)
        class( dbval ), intent(in) :: rhs
      end subroutine assign_dbval_b4
-
+     ! str
+     module subroutine assign_dbval_str( lhs, rhs )
+       character(:), intent(out), allocatable :: lhs
+       class( dbval ), intent(in) :: rhs
+     end subroutine assign_dbval_str
 
 
      ! ptrs
@@ -262,7 +266,7 @@ module m_dbval
      module procedure :: assign_dbval_b3
      module procedure :: assign_dbval_b4
 
-     ! assign_str
+     module procedure :: assign_dbval_str
   end interface assignment(=)
 
   interface assignment(=)
@@ -334,13 +338,6 @@ contains
   function dbval_constructor_cptr( val, dtype, drank, dsize, ierr )result(me)
     !! constructor
     implicit none
-    interface
-       function c_strlen(str) bind(c, name='strlen')
-         import :: c_ptr, c_size_t
-         type(c_ptr), intent(in), value :: str
-         integer(c_size_t) :: c_strlen
-       end function c_strlen
-    end interface
     type( c_ptr ), value :: val
     integer, intent(in) :: dtype, drank
     integer, intent(in) :: dsize(drank)
@@ -379,7 +376,7 @@ contains
        ! only rank-0 for strings ...
        select case( drank )
        case( 0 )
-          wordsize=c_strlen( val )
+          wordsize=strlen( val )
           call c_f_pointer( val, cstr, shape=[wordsize+1] )
           allocate( character(len=wordsize) :: me%str )
           do i = 1, wordsize
@@ -409,6 +406,31 @@ contains
     me%drank = drank
     me%dtype = dtype
     me%dsize = dsize
+  contains
+    function strlen(str)
+      interface
+         function c_strlen(str) bind(c, name='strlen')
+           import :: c_ptr, c_size_t
+           type(c_ptr), intent(in), value :: str
+           integer(c_size_t) :: c_strlen
+         end function c_strlen
+      end interface
+      type(c_ptr), intent(in), value :: str
+      integer(c_size_t) :: strlen
+      integer :: i
+      character(len=1, kind=c_char), pointer :: cstr(:)
+      ! string len from c
+      strlen = c_strlen( str )
+      call c_f_pointer( str, cstr, [strlen+1] )
+      i = 1
+      ! re-count the wordsize, it seems c_null_char is transformed into: 0)\null
+      cst_: do while( i < strlen )
+         if( cstr(i) == c_null_char ) exit cst_
+         if( cstr(i) == "0" .and. cstr(i+1)==")") exit cst_
+         i = i + 1
+      end do cst_
+      strlen=i
+    end function strlen
   end function dbval_constructor_cptr
 
 
@@ -432,7 +454,7 @@ contains
     case( DTYPE_REAL32 ); write(unit, "(*(g0,:,1x))", iostat=iostat, iomsg=iomsg ) me%rf
     case( DTYPE_REAL64 ); write(unit, "(*(g0,:,1x))", iostat=iostat, iomsg=iomsg ) me%rd
     case( DTYPE_BOOL   ); write(unit, "(*(g0,:,1x))", iostat=iostat, iomsg=iomsg ) me%b
-    case( DTYPE_STR    ); write(unit, "(a)", iostat=iostat, iomsg=iomsg ) me%str
+    case( DTYPE_STR    ); write(unit, "(a,1x,i0)", iostat=iostat, iomsg=iomsg ) me%str,len(me%str)
     end select
   end subroutine write_formatted
 

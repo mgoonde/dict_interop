@@ -159,6 +159,11 @@ contains
     call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
     allocate( lhs, source=logical(valptr, kind(lhs)) )
   end procedure
+  ! str
+  module procedure assign_dbval_str
+    ASSERT( rhs%dtype, DTYPE_STR, rhs%drank, 0, "str" )
+    lhs = rhs%str
+  end procedure
 
 
 
@@ -262,7 +267,6 @@ contains
     ASSERT( rhs%dbval%dtype, DTYPE_BOOL, rhs%drank, 4, "ptr_b4" )
     call c_f_pointer( rhs%dbval%cptr, lhs, shape=rhs%dsize )
   end procedure
-
 
 end submodule m_dbval_assignments
 

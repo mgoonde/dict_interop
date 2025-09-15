@@ -58,6 +58,20 @@ program test_db
   write(*,"(*(i0,1x))") t1
   ! write(*,*) t2
 
+  block
+    character(:), allocatable :: str1
+    character(:), allocatable :: str2
+
+    ! if string is allocatable, pad with c_null_char
+    str1="string text stuff"//c_null_char
+    ierr = db_add( db, "ss", str1, DTYPE_STR )
+    call db_print(db)
+
+    ! str2 = db_get_cpy( db, "ss" )
+    str2 = db_get_cpy( db, "ss", reshape=[2] )
+    write(*,*) "str2", str2
+  end block
+
   nullify(t2)
   call db_destroy(db)
 

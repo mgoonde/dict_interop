@@ -268,8 +268,6 @@ contains
     rank(2); ptrval=LOC(val)
     rank(3); ptrval=LOC(val)
     rank(4); ptrval=LOC(val)
-    rank(5); ptrval=LOC(val)
-    rank(6); ptrval=LOC(val)
     end select
     cval = transfer(ptrval, cval)
 
