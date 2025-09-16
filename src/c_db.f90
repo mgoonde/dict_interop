@@ -51,7 +51,7 @@ end module db_c_tools
 ! external stuff for bind(c)
 function db_create()result(cptr)bind(C,name="db_create")
   use, intrinsic :: iso_c_binding, only: c_ptr
-  use m_db, only: db_create_x => db_create
+  use db, only: db_create_x => db_create
   implicit none
   type( c_ptr ) :: cptr
   cptr = db_create_x()
@@ -60,7 +60,7 @@ end function db_create
 
 subroutine db_destroy(cptr)bind(C,name="db_destroy")
   use, intrinsic :: iso_c_binding, only: c_ptr
-  use m_db, only: db_destroy_x => db_destroy
+  use db, only: db_destroy_x => db_destroy
   type(c_ptr), intent(in), value :: cptr
   call db_destroy_x(cptr)
 end subroutine db_destroy
@@ -68,7 +68,7 @@ end subroutine db_destroy
 
 subroutine db_print(cptr)bind(C,name="db_print")
   use, intrinsic :: iso_c_binding, only: c_ptr
-  use m_db, only: db_print_x => db_print
+  use db, only: db_print_x => db_print
   type(c_ptr), intent(in), value :: cptr
   call db_print_x(cptr)
 end subroutine db_print
@@ -76,7 +76,7 @@ end subroutine db_print
 
 function db_add(cptr, key, val, dtype, drank, store_shape, overwrite )result(ierr)bind(C,name="db_add")
   use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_char, c_size_t, c_null_char
-  use m_db, only: db_add_x => db_add
+  use db, only: db_add_x => db_add
   use db_c_tools
   implicit none
   type( c_ptr ), intent(in), value :: cptr
@@ -100,7 +100,7 @@ end function db_add
 
 
 function db_get_cpy( cptr, key )result(val)bind(C,name="db_get_cpy")
-  use m_db, only: db_get_cpy_x => db_get_cpy
+  use db, only: db_get_cpy_x => db_get_cpy
   use m_dbval, only: dbval_copy, dbval
   use, intrinsic :: iso_c_binding, only: c_ptr, c_char
   use db_c_tools, only: c2f_char
@@ -126,7 +126,7 @@ end function db_get_cpy
 
 function db_get_ptr( cptr, key )result(val)bind(C,name="db_get_ptr")
   use, intrinsic :: iso_c_binding, only: c_ptr, c_char
-  use m_db, only: db_get_ptr_x => db_get_ptr
+  use db, only: db_get_ptr_x => db_get_ptr
   use m_dbval, only: dbval_ptr, dbval
   use db_c_tools, only: c2f_char
   implicit none

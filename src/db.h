@@ -14,4 +14,9 @@ int db_add( t_db* db, char* key, void* val, int dtype, int drank, int* store_sha
 void* db_get_cpy( t_db* db, char* key );
 void* db_get_ptr( t_db* db, char* key );
 
+/* int db_exist( t_db* db, char* key ); */
+/* int db_get_dtype( t_db* db, char* key ); */
+/* int db_get_drank( t_db* db, char* key ); */
+/* int* db_get_dsize( t_db* db, char* key ); */
+
 void db_free( void* val );

@@ -1,13 +1,12 @@
 program test_db
-  use m_db
+  use db
+  use, intrinsic :: iso_c_binding
   implicit none
 
   type( c_ptr ) :: db
   integer :: ierr
   integer, allocatable :: i1(:), ii2(:,:)
   integer :: m, i
-  ! type( dbval_ptr ), pointer :: tptr
-  type( dbval_ptr ) :: tptr
   integer(c_int), pointer :: ti, t1(:), t2(:,:)
 
   integer :: i2(3,4)
