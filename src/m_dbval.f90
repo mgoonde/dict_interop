@@ -49,6 +49,7 @@ module m_dbval
   type :: dbval_ptr
      !! auxiliary type to help overloading pointer assignment
      type(dbval), pointer :: dbval => null()
+     integer :: dtype
      integer :: drank
      integer, allocatable :: dsize(:)
    contains

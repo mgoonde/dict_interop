@@ -5,7 +5,7 @@ program test_db
   type( c_ptr ) :: db
   integer :: ierr
   integer, allocatable :: i1(:), ii2(:,:)
-  integer :: m
+  integer :: m, i
   ! type( dbval_ptr ), pointer :: tptr
   type( dbval_ptr ) :: tptr
   integer(c_int), pointer :: ti, t1(:), t2(:,:)
@@ -48,7 +48,7 @@ program test_db
   ! do m = 1, 6
   !    write(*,*) m, ii2(:,m)
   ! end do
-  deallocate(i1)
+  ! deallocate(i1)
 
   ! write(*,*) ii2
   ! deallocate(ii2)
@@ -68,11 +68,17 @@ program test_db
     call db_print(db)
 
     ! str2 = db_get_cpy( db, "ss" )
-    str2 = db_get_cpy( db, "ss", reshape=[2] )
+    str2 = db_get_cpy( db, "ss" )
     write(*,*) "str2", str2
   end block
 
   nullify(t2)
   call db_destroy(db)
 
+  write(*,*) "m after delete",m
+
+  do i = 1, 12
+     write(*,*) i, i1(i)
+  end do
+  deallocate(i1)
 end program test_db

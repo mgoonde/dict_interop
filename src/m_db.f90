@@ -1,3 +1,4 @@
+#define DBG(mmsg,vval) write(*,"(a,'::',i0,2x,g0,x,g0)")__FILE__,__LINE__,mmsg,vval
 module m_db
 
   ! use m_error
@@ -40,7 +41,7 @@ module m_db
      ! type( t_error ), pointer :: bugs => null()
 
    contains
-     procedure, private :: get_index
+     procedure :: get_index
      procedure, private :: realloc
      procedure, private :: print
      procedure, private :: add => t_db_add
@@ -58,6 +59,8 @@ contains
     integer :: idx                    !! index of data under `key`
     integer :: i
     !! loop over all
+    DBG( "key", key)
+    DBG( "n_occupied", me%n_occupied )
     do idx = 1, me% n_occupied
        if( me%keys(idx) == key ) return
     end do
@@ -211,6 +214,7 @@ contains
     do i = 1, me% n_occupied
        !! skip empty
        if( me%flags(i) == "e" ) cycle
+       write(*,*) "idx loc:",i, transfer(me%vals(i)%cptr, c_intptr_t )
        call dbval_destroy( me% vals(i) )
     end do
     deallocate( me% keys )
@@ -291,7 +295,12 @@ contains
     call c_f_pointer(db, me)
     idx = me%get_index(key)
     if( idx < 1 ) return
+    ! this is not a hard copy....
+    ! the actual copying happens in assignment overload
     val = me%vals(idx)
+    ! if we do the below, it shoudl dbval%destroy() in assignment;
+    ! but this would mean to effectively make 2 copies, one here and one is assignment
+    ! call dbval_copy( me%vals(idx), val )
     if(present(reshape)) then
        val%drank = size(reshape)
        val%dsize = reshape
@@ -314,6 +323,7 @@ contains
     if( idx < 1 ) return
     nullify(val_ptr%dbval)
     val_ptr%dbval => me%vals(idx)
+    val_ptr%dtype = me%vals(idx)%dtype
     val_ptr%drank = me%vals(idx)%drank
     val_ptr%dsize = me%vals(idx)%dsize
     if(present(reshape)) then

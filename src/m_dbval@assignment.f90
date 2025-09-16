@@ -78,6 +78,7 @@ contains
     ASSERT(rhs%dtype, DTYPE_REAL32, rhs%drank, 1, "rf1")
     call c_f_pointer( rhs%cptr, valptr, shape=rhs%dsize )
     allocate( lhs, source=real(valptr, kind(lhs)) )
+    ! call rhs%destroy()
   end procedure
   module procedure assign_dbval_rf2
     real(c_float), pointer :: valptr(:,:)
@@ -164,6 +165,7 @@ contains
     ASSERT( rhs%dtype, DTYPE_STR, rhs%drank, 0, "str" )
     lhs = rhs%str
   end procedure
+
 
 
 
