@@ -7,6 +7,7 @@ project( db
 
 
 
+set(CMAKE_BUILD_TYPE Debug)
 
 set( srcs
   src/m_dbval.f90

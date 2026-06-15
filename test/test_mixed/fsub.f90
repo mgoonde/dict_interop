@@ -10,7 +10,7 @@ end module savethis
 
 
 subroutine pass_db2f90( db )bind(c)
-  use db
+  use db_mod
   use savethis
   type( c_ptr ), intent(in) :: db
   integer :: ierr

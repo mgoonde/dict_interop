@@ -1,4 +1,4 @@
-module db
+module db_mod
 
   use m_db
   use m_dbval
@@ -11,7 +11,6 @@ module db
   public :: DTYPE_REAL64
   public :: DTYPE_STR
   public :: DTYPE_BOOL
-  public :: DTYPE_CPTR
 
   public :: c_ptr
   public :: db_create
@@ -140,7 +139,6 @@ contains
     type is( real(c_double)  ); dtype=DTYPE_REAL64
     type is( logical(c_bool) ); dtype=DTYPE_BOOL
     type is( character(*)    ); dtype=DTYPE_STR
-    class is( c_ptr          ); dtype=DTYPE_CPTR
     end select
   end function val_dtype
 
@@ -249,4 +247,4 @@ contains
   end function db_get_dsize
 
 
-end module db
+end module db_mod

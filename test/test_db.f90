@@ -1,5 +1,5 @@
 program test_db
-  use db
+  use db_mod
   use, intrinsic :: iso_c_binding
   implicit none
 

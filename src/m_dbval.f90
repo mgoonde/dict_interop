@@ -11,8 +11,7 @@ module m_dbval
        DTYPE_REAL32  = 2, &
        DTYPE_REAL64  = 3, &
        DTYPE_STR     = 4, &
-       DTYPE_BOOL    = 5, &
-       DTYPE_CPTR    = 6
+       DTYPE_BOOL    = 5
 
 
   type :: dbval
