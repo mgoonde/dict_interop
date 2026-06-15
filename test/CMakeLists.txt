@@ -6,7 +6,7 @@ set_target_properties( test_dbval
   Fortran_FORMAT FREE )
 target_compile_options( test_dbval
   PRIVATE
-  -ffree-line-length-none
+  "${flagstr}"
   )
 target_link_libraries( test_dbval
   PRIVATE
@@ -22,7 +22,7 @@ set_target_properties( test_db
   Fortran_FORMAT FREE )
 target_compile_options( test_db
   PRIVATE
-  -ffree-line-length-none
+  "${flagstr}"
   )
 target_link_libraries( test_db
   PRIVATE
@@ -41,11 +41,13 @@ add_test( NAME test_c COMMAND test_c )
 
 
 
-add_library( pass2f90 OBJECT test_mixed/fsub.f90)
-target_link_libraries( pass2f90 PUBLIC "${PROJECT_NAME}" )
-add_executable( test_mixed test_mixed/cprog.c )
+add_executable( test_mixed test_mixed/cprog.c test_mixed/fsub.f90 )
 target_link_libraries( test_mixed
   PRIVATE
-  pass2f90
+  "${PROJECT_NAME}"
   )
+set_target_properties(test_mixed
+  PROPERTIES
+  LINKER_LANGUAGE C
+)
 add_test( NAME test_mixed COMMAND test_mixed)

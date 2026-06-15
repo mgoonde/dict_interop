@@ -42,7 +42,9 @@ int main(){
     printf( "%d %f\n",i,rv[i]);
   }
   free(rv);
+  /* db_free( rv ); */
 
   /* db_free( cval ); */
+  /* free( cval ); */
 
 }

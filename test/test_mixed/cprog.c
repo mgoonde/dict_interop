@@ -3,8 +3,8 @@
 #include <stdlib.h>
 
 
-void pass_db2f90( void* db );
-void print_r( );
+extern void pass_db2f90( void* db );
+extern void print_r( );
 
 
 int main(){
@@ -28,4 +28,5 @@ int main(){
   print_r();
 
   db_destroy(db);
+  /* free(db); */
 }
