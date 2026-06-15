@@ -442,7 +442,7 @@ contains
     !! The check for the same metadata happens before this call.
     !! String types are not modified, but always destroyed and re-created
     implicit none
-    class( dbval ), intent(in) :: me
+    class( dbval ), intent(inout) :: me
     type(c_ptr), value, intent(in) :: newval
     integer :: ierr
     integer(c_int), pointer :: i1(:)
@@ -469,7 +469,7 @@ contains
     case default
        ierr = -2
        write(msg, "('Error at :: ',a,'::',i0,1x,a,i0)") __FILE__,__LINE__,&
-            "unknown dtype value::", dtype
+            "unknown dtype value::", me%dtype
     end select
     if( ierr /= 0 ) then
        me% errstr = trim(msg)

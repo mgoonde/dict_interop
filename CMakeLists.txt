@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.21)
 project( db
   DESCRIPTION "dictionary structure with C interop"
   LANGUAGES Fortran C CXX
@@ -30,9 +30,18 @@ set_target_properties(${PROJECT_NAME}
   )
 
 
+include(CheckFortranCompilerFlag)
+set( flagstr "" )
+check_fortran_compiler_flag( "-ffree-line-length-0" ff0 )
+if(ff0)
+  list(APPEND flagstr "-ffree-line-length-0")
+endif()
+
+
+
 target_compile_options( "${PROJECT_NAME}"
   PRIVATE
-  -ffree-line-length-none
+  "${flagstr}"
   )
 
 target_include_directories( "${PROJECT_NAME}"
