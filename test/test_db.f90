@@ -13,14 +13,14 @@ program test_db
 
   db = db_create()
 
-  ierr = db_add( db, "key1", [3,4,5], DTYPE_INT )
+  ierr = db_add( db, "key1", [3,4,5] )
 
   call db_print(db)
 
 
-  ierr = db_add( db, "key1", [3,4,6], DTYPE_INT, overwrite=.true. )
+  ierr = db_add( db, "key1", [3,4,6], overwrite=.true. )
 
-  ierr = db_add( db, "key_int", 18, DTYPE_INT )
+  ierr = db_add( db, "key_int", 18 )
 
   m = db_get_cpy( db, "key_int" )
   write(*,*) "m:",m
@@ -39,7 +39,7 @@ program test_db
   i2(:,2) = [21,22,23]
   i2(:,3) = [31,32,33]
   i2(:,4) = [41,42,43]
-  ierr = db_add( db, "i2", i2, DTYPE_INT )
+  ierr = db_add( db, "i2", i2 )
 
   call db_print(db)
 
@@ -63,7 +63,7 @@ program test_db
 
     ! if string is allocatable, pad with c_null_char
     str1="string text stuff"//c_null_char
-    ierr = db_add( db, "ss", str1, DTYPE_STR )
+    ierr = db_add( db, "ss", str1 )
     call db_print(db)
 
     ! str2 = db_get_cpy( db, "ss" )

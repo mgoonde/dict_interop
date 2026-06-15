@@ -95,7 +95,7 @@ function db_add(cptr, key, val, dtype, drank, store_shape, overwrite )result(ier
   fkey = c2f_char(key)
   ovr = .false.
   if( overwrite /= 0_c_int )ovr=.true.
-  ierr = int( db_add_x(cptr, fkey, val, dtype, store_shape, ovr), kind(ierr))
+  ierr = int( db_add_x(cptr, fkey, val, dtype=dtype, store_shape=store_shape, overwrite=ovr), kind(ierr))
 end function db_add
 
 

@@ -11,6 +11,7 @@ module db
   public :: DTYPE_REAL64
   public :: DTYPE_STR
   public :: DTYPE_BOOL
+  public :: DTYPE_CPTR
 
   public :: c_ptr
   public :: db_create
@@ -83,21 +84,23 @@ contains
     !! By default, the shape of `val` is preserved.
     !! if `store_shape` is specified, then the value is reshaped
     !! as specified by `store_shape`.
+    use, intrinsic :: iso_c_binding, only: c_int, c_float, c_double, c_bool
     implicit none
     type( c_ptr ), intent(in) :: db
     character(*), intent(in) :: key
     class(*), intent(in) :: val(..)
-    integer, intent(in) :: dtype
+    integer, intent(in), optional :: dtype
     integer, intent(in), optional :: store_shape(:)
     logical, intent(in), optional :: overwrite
     integer :: ierr
 
     type( t_db ), pointer :: me
     logical :: ovr
-    integer :: srank, i
+    integer :: srank, i, dd
     integer, allocatable :: ssize(:)
     integer(c_intptr_t) :: ptrval
     type( c_ptr ) :: cval
+
 
     srank = rank(val)
     allocate( ssize(1:srank) )
@@ -111,19 +114,35 @@ contains
 
     ! create cptr from class(*) val
     select rank(val)
-    rank(0); ptrval=LOC(val)
-    rank(1); ptrval=LOC(val)
-    rank(2); ptrval=LOC(val)
-    rank(3); ptrval=LOC(val)
-    rank(4); ptrval=LOC(val)
+    rank(0); ptrval=LOC(val); dd=val_dtype(val)
+    rank(1); ptrval=LOC(val); dd=val_dtype(val(1))
+    rank(2); ptrval=LOC(val); dd=val_dtype(val(1,1))
+    rank(3); ptrval=LOC(val); dd=val_dtype(val(1,1,1))
+    rank(4); ptrval=LOC(val); dd=val_dtype(val(1,1,1,1))
     end select
     cval = transfer(ptrval, cval)
 
+    if(present(dtype)) dd = dtype
+    write(*,*) "HERE",dd
     call c_f_pointer( db, me )
     ovr=.false.
     if(present(overwrite))ovr=overwrite
-    ierr = me%add( key, cval, dtype, srank, ssize, ovr )
+    ierr = me%add( key, cval, dd, srank, ssize, ovr )
   end function db_add
+
+  function val_dtype(val) result(dtype)
+    class(*), intent(in) :: val
+    integer :: dtype
+    dtype=DTYPE_UNKNOWN
+    select type(val)
+    type is( integer(c_int)  ); dtype=DTYPE_INT
+    type is( real(c_float)   ); dtype=DTYPE_REAL32
+    type is( real(c_double)  ); dtype=DTYPE_REAL64
+    type is( logical(c_bool) ); dtype=DTYPE_BOOL
+    type is( character(*)    ); dtype=DTYPE_STR
+    class is( c_ptr          ); dtype=DTYPE_CPTR
+    end select
+  end function val_dtype
 
 
   function db_get_cpy( db, key, reshape )result(val)

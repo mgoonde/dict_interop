@@ -6,6 +6,10 @@ module m_db
   use, intrinsic :: iso_c_binding
   implicit none
 
+  private
+  public :: t_db
+  public :: batch_size
+  public :: max_keylen
 
 
   !> initial allocation size, reallocate when exceed
@@ -157,7 +161,7 @@ contains
     integer :: idx, strlen
     ierr=0
     idx = me%get_index(key)
-    if( idx > 0 .and. .not.overwrite) then
+    check_: if( idx > 0 .and. .not.overwrite) then
        ! data exists, will not overwrite
        ierr = -5 !ERR_OVERWRITE
        ! if(associated(me%bugs))call me%bugs%err_set(ier,__FILE__,__LINE__, &
@@ -165,22 +169,38 @@ contains
        return
     elseif( idx > 0 .and. overwrite ) then
        ! overwrite existing key-val on same idx
-       call me%vals(idx)%destroy()
+       ! check metadata, if everything is identical, just modify value,
+       ! if not, we destroy and create new value in memory.
+       ! NOTE: string types are always recreated
+       if(       me%vals(idx)%dtype == dtype &
+           .and. me%vals(idx)%drank == drank &
+           .and. all(me%vals(idx)%dsize == dsize) &
+           .and. dtype /= DTYPE_STR ) then
+          ! all metadata are the same, just modify the value
+          ierr = me%vals(idx)% modif_val( val )
+          return
+       else
+          ! there is some change in metadata, destroy the value at idx and create new
+          call me%vals(idx)%destroy()
+          exit check_
+       end if
     elseif( idx < 0 ) then
        ! key is new
        call me% realloc()
        idx = me% n_occupied + 1
-    endif
-    me%vals(idx) = dbval( val, dtype, drank, dsize, ierr )
+    endif check_
     if( ierr/= 0 ) then
        ! get errmsg
        return
     end if
+    ! create new dbval
+    me%vals(idx) = dbval( val, dtype, drank, dsize, ierr )
     ! set metadata
     strlen = min( len_trim(key), max_keylen )
     me%keys(idx) = key( 1:strlen )
     me%flags(idx) = "o"
-    if(.not.overwrite) me% n_occupied = me% n_occupied + 1
+    if( .not. overwrite ) me% n_occupied = me% n_occupied + 1
+
   end function t_db_add
 
 end module m_db

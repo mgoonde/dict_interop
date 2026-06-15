@@ -11,7 +11,8 @@ module m_dbval
        DTYPE_REAL32  = 2, &
        DTYPE_REAL64  = 3, &
        DTYPE_STR     = 4, &
-       DTYPE_BOOL    = 5
+       DTYPE_BOOL    = 5, &
+       DTYPE_CPTR    = 6
 
 
   type :: dbval
@@ -34,6 +35,7 @@ module m_dbval
      procedure, public :: destroy => dbval_destroy !! explicit destructor
      procedure, public :: nullify => dbval_nullify
      procedure, public :: errmsg => dbval_errmsg
+     procedure, public :: modif_val => dbval_modify
 
      procedure, private :: write_formatted
      generic, public :: write(formatted) => write_formatted
@@ -433,6 +435,47 @@ contains
       strlen=i
     end function strlen
   end function dbval_constructor_cptr
+
+
+  function dbval_modify( me, newval )result(ierr)
+    !! modify an already-existing dbval with same dtype, drank, and dsize
+    !! The check for the same metadata happens before this call.
+    !! String types are not modified, but always destroyed and re-created
+    implicit none
+    class( dbval ), intent(in) :: me
+    type(c_ptr), value, intent(in) :: newval
+    integer :: ierr
+    integer(c_int), pointer :: i1(:)
+    real(c_float ), pointer :: rf(:)
+    real(c_double), pointer :: rd(:)
+    character(len=1, kind=c_char), pointer :: cstr(:)
+    logical(c_bool), pointer :: b(:)
+    integer :: ssize, i
+    character(len=256) :: msg
+    ierr = 0
+    select case( me%dtype )
+    case( DTYPE_INT )
+       call c_f_pointer( newval, i1, shape=[size(me%i)] )
+       me%i = i1
+    case( DTYPE_REAL32 )
+       call c_f_pointer( newval, rf, shape=[size(me%rf)] )
+       me%rf = rf
+    case( DTYPE_REAL64 )
+       call c_f_pointer( newval, rd, shape=[size(me%rd)] )
+       me%rd = rd
+    case( DTYPE_BOOL )
+       call c_f_pointer( newval, b, shape=[size(me%b)] )
+       me%b = b
+    case default
+       ierr = -2
+       write(msg, "('Error at :: ',a,'::',i0,1x,a,i0)") __FILE__,__LINE__,&
+            "unknown dtype value::", dtype
+    end select
+    if( ierr /= 0 ) then
+       me% errstr = trim(msg)
+       return
+    end if
+  end function dbval_modify
 
 
   subroutine write_formatted( me, unit, iotype, v_list, iostat, iomsg )
